@@ -7,14 +7,36 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
-import { Trash2, Edit, CheckCircle2, Users } from "lucide-react";
+import { 
+  Trash2, 
+  Edit, 
+  CheckCircle2, 
+  Users, 
+  Star,
+  StarOff,
+  MoreHorizontal,
+  Archive,
+  Copy,
+  Share2
+} from "lucide-react";
 import { useTaskStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ProjectCardProps {
   project: Project;
   onEdit: (project: Project) => void;
+  viewType: "grid" | "list" | "table" | "calendar";
+  isFavorite: boolean;
+  onFavoriteToggle: () => void;
 }
 
 const priorityClasses: Record<Priority, string> = {
@@ -31,7 +53,13 @@ const statusClasses: Record<Status, string> = {
   archived: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
 };
 
-export const ProjectCard: FC<ProjectCardProps> = ({ project, onEdit }) => {
+export const ProjectCard: FC<ProjectCardProps> = ({ 
+  project, 
+  onEdit, 
+  viewType,
+  isFavorite,
+  onFavoriteToggle
+}) => {
   const { deleteProject, completeProject, tags } = useTaskStore();
   
   const isCompleted = project.status === "completed";
@@ -43,6 +71,128 @@ export const ProjectCard: FC<ProjectCardProps> = ({ project, onEdit }) => {
   const handleDelete = () => {
     deleteProject(project.id);
   };
+
+  const handleDuplicate = () => {
+    // Implement project duplication logic
+  };
+
+  const handleShare = () => {
+    // Implement project sharing logic
+  };
+
+  const handleArchive = () => {
+    // Implement project archiving logic
+  };
+  
+  if (viewType === "list") {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        layout
+        transition={{ duration: 0.2 }}
+      >
+        <Card className={cn(
+          "transition-all duration-200 hover:shadow-md", 
+          isCompleted ? "opacity-70" : "opacity-100"
+        )}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onFavoriteToggle}
+                  className={cn(
+                    "hover:text-yellow-500",
+                    isFavorite && "text-yellow-500"
+                  )}
+                >
+                  {isFavorite ? (
+                    <Star className="h-4 w-4 fill-current" />
+                  ) : (
+                    <StarOff className="h-4 w-4" />
+                  )}
+                </Button>
+                <div>
+                  <h3 className={cn(
+                    "text-lg font-medium",
+                    isCompleted && "line-through opacity-70"
+                  )}>
+                    {project.name}
+                  </h3>
+                  {project.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-1">
+                      {project.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Progress value={project.progress} className="w-24" />
+                  <span className="text-sm font-medium">{Math.round(project.progress)}%</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Badge className={priorityClasses[project.priority]}>
+                    {project.priority}
+                  </Badge>
+                  <Badge className={statusClasses[project.status]}>
+                    {project.status}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {project.teamMembers.length}
+                  </span>
+                </div>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onEdit(project)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleComplete} disabled={isCompleted}>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Complete
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDuplicate}>
+                      <Copy className="h-4 w-4 mr-2" />
+                      Duplicate
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleShare}>
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleArchive} className="text-yellow-600">
+                      <Archive className="h-4 w-4 mr-2" />
+                      Archive
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
   
   return (
     <motion.div 
@@ -58,20 +208,74 @@ export const ProjectCard: FC<ProjectCardProps> = ({ project, onEdit }) => {
       )}>
         <CardContent className="p-4">
           <div className="flex justify-between items-start mb-2">
-            <h3 className={cn(
-              "text-lg font-medium line-clamp-2",
-              isCompleted && "line-through opacity-70"
-            )}>
-              {project.name}
-            </h3>
-            <div className="flex gap-1">
-              <Badge className={priorityClasses[project.priority]}>
-                {project.priority}
-              </Badge>
-              <Badge className={statusClasses[project.status]}>
-                {project.status}
-              </Badge>
+            <div className="flex items-start gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onFavoriteToggle}
+                className={cn(
+                  "hover:text-yellow-500",
+                  isFavorite && "text-yellow-500"
+                )}
+              >
+                {isFavorite ? (
+                  <Star className="h-4 w-4 fill-current" />
+                ) : (
+                  <StarOff className="h-4 w-4" />
+                )}
+              </Button>
+              <div>
+                <h3 className={cn(
+                  "text-lg font-medium line-clamp-2",
+                  isCompleted && "line-through opacity-70"
+                )}>
+                  {project.name}
+                </h3>
+                <div className="flex gap-1 mt-1">
+                  <Badge className={priorityClasses[project.priority]}>
+                    {project.priority}
+                  </Badge>
+                  <Badge className={statusClasses[project.status]}>
+                    {project.status}
+                  </Badge>
+                </div>
+              </div>
             </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(project)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleComplete} disabled={isCompleted}>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Complete
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDuplicate}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleShare}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleArchive} className="text-yellow-600">
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archive
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
           {project.description && (
@@ -130,31 +334,6 @@ export const ProjectCard: FC<ProjectCardProps> = ({ project, onEdit }) => {
         <CardFooter className="p-4 pt-0 flex justify-between">
           <div className="text-xs text-muted-foreground">
             Created: {format(new Date(project.createdAt), "PP")}
-          </div>
-          
-          <div className="flex gap-1">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={handleComplete}
-              disabled={isCompleted}
-            >
-              <CheckCircle2 className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => onEdit(project)}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={handleDelete}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
           </div>
         </CardFooter>
       </Card>
